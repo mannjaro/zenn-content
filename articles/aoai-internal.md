@@ -36,6 +36,7 @@ AppService による ChatGPT ライクな WebUI と、API Management による�
 
 特に難しいポイントは無いです。
 ネットワークタブから許可するアクセス元のCIDRを登録する、もしくは後述するプライベートエンドポイントを利用します。また、必要に応じて IAM からアクセスを制限します。
+今回は API Management からのアクセスに限定し、API Management のパブリックIPを許可します。プライベートエンドポイントを利用しない理由については API Management の作成で説明します。
 
 ::: message alert
 すべてのネットワークを許可すると、どこからでもアクセス可能な状態になってしまいます
@@ -44,14 +45,20 @@ AOAI 作成後は自分たちの利用したいモデル（GPT3.5など）を Az
 
 ## AppService の作成
 
-注意するべきポイントは、
+最低限必要なのは以下の3点です。
+
 - プライベートエンドポイントを作成する
-    - パブリックアクセスを許可しない
+- パブリックアクセスを許可しない
 - AD認証を有効にし、エンタープライズアプリケーションから「割り当てが必要ですか？」を有効にする
 
 プライベートエンドポイントとは VNet 内のサブネットに対して受信専用のエンドポイントを作成する機能です。これによって VNet 内部から AppService にアクセスできます。
 
 https://learn.microsoft.com/ja-jp/azure/private-link/private-endpoint-overview
+
+逆に AppService から VNet 内部のリソースにアクセスするためには VNet統合 を有効にします。これにより、Inbound 、Outbound のネットワークを VNet 内部に閉じることができます。
+
+https://learn.microsoft.com/ja-jp/azure/app-service/overview-vnet-integration
+
 
 # おわりに
 # 参考
