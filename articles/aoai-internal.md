@@ -32,9 +32,30 @@ https://github.com/Azure-Samples/jp-azureopenai-samples/tree/main/6.azureopenai-
 
 AppService による ChatGPT ライクな WebUI と、API Management によるアクセスログの監視を行います。
 
+## Azure Virtual Network（VNet）の作成
+
+VNet は既に以下のような構成が取られていました。
+
+![]()
+
+特に注目するべき点は、カスタムDNSが設定されていることだと思います。イントラネット向けに DNS サーバーが設置されているのは珍しいことでは無く、担当した環境では Azure 側からオンプレに名前解決できるような仕掛けがされていました。
+これのおかげでめちゃくちゃハマったので後ほど解説します。
+
+今回は VNet として 10.0.1.0/24 の CIDR が用意されているという前提で進めます。
+最初はサブネットとして 10.0.1.0/24 が使われていたため、次のように分割を行いました。
+
+- PrivateEndpoint 作成用のサブネット
+- AppService VNet統合専用
+- DNS Private Resolver 受信エンドポイント専用
+
+::: message
+下2つはサブネット内に何も置いてはいけない 専用 のサブネットになります。
+:::
+
+ややこしくなりますが、DNS Private Resolver は後ほどイントラネット向けにDNSを登録することで不要になります。
+
 ## Azure OpenAI （AOAI） の作成
 
-特に難しいポイントは無いです。
 ネットワークタブから許可するアクセス元のCIDRを登録する、もしくは後述するプライベートエンドポイントを利用します。また、必要に応じて IAM からアクセスを制限します。
 今回は API Management からのアクセスに限定し、API Management のパブリックIPを許可します。プライベートエンドポイントを利用しない理由については API Management の作成時に説明します。
 
@@ -82,7 +103,6 @@ API Management は AWS でいう API Gateway と同様の役割を担います�
 
 後者の方が理想的に見えますが、NSGの設定が煩雑になること、Developer か Premium プランのみ機能が利用可能であることから今回は見送りました。
 特に、Premium プランは $2,795.17/month と非常に高額であるため利用を断念しました。
-~~Basic, Standard でも VNet 対応して欲しい...~~
 
 https://azure.microsoft.com/ja-jp/pricing/details/api-management/#pricing
 
@@ -97,15 +117,20 @@ https://level69.net/archives/33697
 
 ### Inboud Policy を設定する
 
-API Management には AppService のようにアプリケーションを登録して認証を行うことはできません。あくまで、受信した Body に有効な JWT が含まれているか検証するのみになります。~~これのせいでアーキテクチャを再設計する羽目になりました...~~
+API Management には AppService のようにアプリケーションを登録して認証を行うことはできません。あくまで、受信した Body に有効な JWT が含まれているか検証するのみになります。
 Azure AD を利用する場合、インバウンドポリシーに `<validate-azure-ad-token>` を利用することで簡単に検証が可能です。以下は必要最低限のスニペットです。
 
 ```xml
-<validate-azure-ad-token tenant-id="{{aad-tenant-id}}">
-    <client-application-ids>
-        <application-id>{{aad-client-application-id}}</application-id>
-    </client-application-ids>
-</validate-azure-ad-token>
+<policies>
+    <inbound>
+        <validate-azure-ad-token tenant-id="{{aad-tenant-id}}">
+            <client-application-ids>
+                <application-id>{{aad-client-application-id}}</application-id>
+            </client-application-ids>
+        </validate-azure-ad-token>
+    </inbound>
+    ...
+</policies>
 ```
 
 `{{aad-client-application-id}}` には登録したアプリケーションクライアントIDを入れます。今回は AppService のアプリケーションIDを入れます。
@@ -113,13 +138,53 @@ Azure AD を利用する場合、インバウンドポリシーに `<validate-az
 
 https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-policy
 
-また、プライベートエンドポイントからの受信だけを許可することで擬似的にパブリックアクセスを禁止することができます。
+また、プライベートエンドポイントからの受信だけを許可することで擬似的にパブリックアクセスを禁止することができます。以下はサンプルですが、必要に応じてIPアドレス制限などを設けてください。
 
 ```xml
-
+<policies>
+    <inbound>
+        <choose>
+            <when condition="@(context.Request.PrivateEndpointConnection == null">
+                <!-- プライベートエンドポイント以外からのアクセスを拒否 -->
+                <return-response>
+                    <set-status code="403" reason="Forbidden" />
+                    <set-body>
+                        {
+                            "error": {
+                                "message": "Access Forbidden. Please access from Private endpoint."
+                            }
+                        }
+                    </set-body>
+                </return-response>
+            </when>
+        </choose>
+    </inbound>
+    ...
+</policies>
 ```
 
 # ハマったポイント
+
+## AppServiceのプライベートエンドポイントにアクセスできない
+
+### tl;dr
+
+ユーザー定義ルートを作成し、「プライベートエンドポイントのネットワークポリシー」でテーブルルーティングを有効にする
+
+https://learn.microsoft.com/ja-jp/azure/private-link/disable-private-endpoint-network-policy?tabs=network-policy-portal
+
+### 試してみたこと
+
+一番最初にハマったポイントです。同一サブネットに配置したテスト用VMにはSSHでアクセスできるのに、同じサブネットにあるエンドポイントから全くレスポンスが得られませんでした。
+名前解決もできて VNet に到達しているにも関わらずアクセスできず、原因が全く不明でした。
+
+## プライベートエンドポイントの名前解決ができない
+
+## API Management が内部化できない
+
+## AppServiceの認証後リダイレクトURLを変更したい
+
+## AppServiceでカスタムドメインを利用したい
 
 # おわりに
 # 参考
