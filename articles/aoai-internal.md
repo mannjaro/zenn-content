@@ -1,5 +1,5 @@
 ---
-title: "新卒社員が社内向けに Azure OpenAI を構築した話"
+title: "新卒社員が社内向けAIチャットサービスを構築した話 (前編)"
 emoji: "👶"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["Azure", "OpenAI"]
@@ -10,27 +10,15 @@ published: false
 
 https://www.publickey1.jp/blog/23/azure_openai_service.html
 
-本記事では社内向けに Azure OpenAI (以下AOAI) を展開するにあたり、やったことや色んなハマりポイントを備忘録としてまとめました。Azure を含めクラウドサービスの利用は初めてであり、理解の至らない箇所が多々あるかと思います。是非、愛のあるコメントをお待ちしています。
-
-内容的には以下の記事の焼き増しになるので、まずはこちらを参照すると良いかと思います。
-https://dev.classmethod.jp/articles/azure-openai-chatbot/
-https://dev.classmethod.jp/articles/azure-openai-chatbot-in-closed-network/
-
-今回は自社でホストするにあたり異なる点やハマった点などを中心に書いていきます。
+本記事では社内向けに Azure OpenAI (以下AOAI) を展開するにあたり、やったことや色んなハマりポイントを備忘録としてまとめました。
 
 ::: message
-環境はあくまで自社の環境に合わせたものでありどの環境にも適用されるものではありません。あくまで参考程度にしてください。
+あくまで社内の環境に合わせて作成したものです。参考程度にしてください。
 :::
 
 # 前提
 
-オンプレミスから仮想ネットワークまでの経路は既に閉域網でアクセス可能であることを想定しています。具体的には、ExpressRoute やSite to Site VPN などが用意されており VNet のリソースに閉域網でアクセスできる状態です。また、ネットワークトポロジーとして Hub and Spoke を採用しています。
-
-https://learn.microsoft.com/ja-jp/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli
-
-AOAI の利用にはOrganizationに所属しているアカウントで申請が必要です。
-
-https://learn.microsoft.com/ja-jp/azure/ai-services/openai/overview
+オンプレミスから仮想ネットワークまでの経路は既に閉域網でアクセス可能であることを想定しています。具体的には、ExpressRoute やSite to Site VPN などが用意されており VNet のリソースに閉域網でアクセスできる状態です。
 
 # 最終的なゴールイメージ
 
@@ -60,11 +48,14 @@ https://github.com/Azure-Samples/jp-azureopenai-samples/tree/main/6.azureopenai-
 下2つはリソース専用のサブネットになります
 :::
 
-DNS Private Resolver はオンプレ側から名前解決できる場合不要になります。
-今回はカスタムドメインを利用し、プライベートエンドポイントのNICに割り当てられたIPをAレコードとして登録しているため作成しません。
+DNS Private Resolver はオンプレ側から名前解決できる場合不要になります。これを使う場合、利用者PCの優先DNSを変更するか、オンプレ側のDNSサーバーにNSレコードを追加する必要があります。
+今回はカスタムドメインを利用し、プライベートエンドポイントのNICに割り当てられたIPアドレスをAレコードとしてオンプレDNSに登録しています。
 
 ## Azure OpenAI （AOAI） の作成
 
+AOAI の利用にはOrganizationに所属しているアカウントで申請が必要です。
+
+https://learn.microsoft.com/ja-jp/azure/ai-services/openai/overview
 ネットワークタブから許可するアクセス元のCIDRを登録する、もしくは後述するプライベートエンドポイントを利用します。また、必要に応じて IAM からアクセスを制限します。
 今回は API Management からのアクセスに限定し、API Management のパブリックIPを許可します。プライベートエンドポイントを利用しない理由については API Management の作成時に説明します。
 
@@ -75,7 +66,7 @@ DNS Private Resolver はオンプレ側から名前解決できる場合不要�
 
 ## API Management の作成
 
-API Management は AWS でいう API Gateway と同様の役割を担います。閉域化には二つのアプローチがあり排他の関係にあります。
+API Management は AWS でいう API Gateway と同様の役割を担います。閉域化には二つのアプローチがあり排他的です。
 
 - プライベートエンドポイントを作成し、インバウンドポリシーによってアクセスを制限する
 - VNet の内部にリソースを配置し、外部から完全にアクセスできないようにする
@@ -83,7 +74,7 @@ API Management は AWS でいう API Gateway と同様の役割を担います�
 後者の方が理想的に見えますが、NSGの設定が煩雑になること、Developer か Premium プランのみ機能が利用可能であることから今回は見送りました。
 特に、Premium プランは $2,795.17/month と非常に高額であるため利用を断念しました。
 
-https://azure.microsoft.com/ja-jp/pricing/details/api-management/#pricing
+(参考) https://azure.microsoft.com/ja-jp/pricing/details/api-management/#pricing
 
 前者を利用する場合、インバウンドは VNet から可能になりますが、アウトバウンドはパブリックになるため AOAI のプライベートエンドポイントに直接アクセスできません。そのため、AOAI が許可するアクセス元として API Management のパブリックIPを許可する必要があります。
 ~~どうみてもイケてないので、~~ 他にいい方法がある場合は是非コメントをお待ちしております。
@@ -93,18 +84,27 @@ https://azure.microsoft.com/ja-jp/pricing/details/api-management/#pricing
 API Management の ネットワークタブからプライベートエンドポイントを有効化します。
 エンドポイント用に作成したサブネットに配置してください。
 
+![apim_pep](/images/aoai-internal/apim_pep.png)
+
 ### API Management のバックエンドに AOAI を置く
 
 API Management で AOAI を扱う方法は先人たちがまとめてくださっているので、そちらを参照すれば問題ないかと思います。
 
-https://zenn.dev/microsoft/articles/azure-openai-nocode-logging
-
 https://level69.net/archives/33697
+
+例として今回は `/openai` をサフィックスとして利用します。
+
+### AOAIの受信ファイアウォールを設定する
+
+API Management からのみ受信を許可するため、AOAIのネットワークタブから「受信を許可するIPアドレス」として API Management のパブリックIPを指定します。
+API Management をVNet内に配置できればプライベートエンドポイントに対してアクセスできましたが、今回は内部に設置しないためこのような方法を取ります。
 
 ### Inboud Policy を設定する
 
-API Management には AppService のようにアプリケーションを登録して認証を行うことはできません。あくまで、受信した Body に有効な JWT が含まれているか検証するのみになります。
+受信した Body に有効な JWT (アクセストークン) が含まれているか検証します。
 Azure AD を利用する場合、インバウンドポリシーに `<validate-azure-ad-token>` を利用することで簡単に検証が可能です。以下は必要最低限のスニペットです。
+
+https://learn.microsoft.com/ja-jp/azure/api-management/validate-azure-ad-token-policy#examples
 
 ```xml
 <policies>
@@ -119,12 +119,12 @@ Azure AD を利用する場合、インバウンドポリシーに `<validate-az
 </policies>
 ```
 
-`{{aad-client-application-id}}` には登録したアプリケーションクライアントIDを入れます。今回は AppService のアプリケーションIDを入れます。
-また、`<client-application-ids>` は子として複数のアプリケーションを持てるため、AppService とAzure Functions のように複数のアプリケーションを検証できます。
 
-https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-policy
+`{{aad-client-application-id}}` には登録したアプリケーションクライアントIDを入れます。今回は AppService のアプリケーションIDを入れます。`<client-application-ids>` は子として複数のアプリケーションを持てるため、AppService とAzure Functions のように複数のアプリケーションを検証できます。
 
-また、プライベートエンドポイントからの受信だけを許可することで擬似的にパブリックアクセスを禁止することができます。以下はサンプルですが、必要に応じてCORSやIPアドレス制限などを設けてください。
+プライベートエンドポイントからの受信だけを許可することで擬似的にパブリックアクセスを禁止することができます。以下はサンプルですが、必要に応じてCORSやIPアドレス制限などを設けてください。
+
+https://learn.microsoft.com/en-us/azure/api-management/api-management-policy-expressions
 
 ```xml
 <policies>
@@ -155,16 +155,26 @@ https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-p
 </policies>
 ```
 
+
 ### カスタムドメインの設定
 
 API Management でカスタムドメインを利用する場合、TXTレコードによるドメインの検証か適当な証明書が必要です。今回はワイルドカード証明書を設置しました。
-今回は例として `api.contoso.com` というドメインを設定したことにします。
+今回は例として `api.contoso.com` というドメインを設定します。
+
+ここまでで、おおよそ以下の図の通りになります。
 
 ![step1](/images/aoai-internal/step1.png)
+
+API Managementにアクセスできるのは VNet 経由だけであり、AOAI にアクセスできるのはAPI Management のみになります。
+また、API ManagementのインバウンドポリシーにJWTの検証を行うことで、AD認証された特定のユーザーのみがAPI Managementを叩くことができます。
 
 ## AppService の作成
 AppService ではユーザーがアクセスするWebサイトを提供します。
 AppServiceは AppServicePlan(ASP) の上に作成するため、事前にASPを作成してください。
+
+UIを提供するアプリケーション部分はインフラ構築とは直接関係ないので、以下の記事通り適当なアプリケーションをデプロイしてください。
+
+https://ks6088ts.github.io/blog/fork-azure-openai-playground/
 
 ### VNetの設定
 AppService を直接プライベートサブネットに配置することはできません。受信と送信それぞれに設定が必要になります。
@@ -190,34 +200,22 @@ https://learn.microsoft.com/ja-jp/azure/app-service/overview-vnet-integration
 
 AppService では Entra ID (慣れていないので以降は Azure ADとして表現します) による認証を手軽に行うことができます。「認証」タブからIDプロバイダーを追加するだけで利用できます。
 
-https://learn.microsoft.com/ja-jp/azure/app-service/configure-authentication-provider-aad?tabs=workforce-tenant
+![easy_auth](/images/aoai-internal/easy_auth.png)
 
 ADに登録された特定のユーザーだけを許可したい場合があると思います。エンタープライズアプリケーションからアクセス可能なグループやユーザーを指定することができます。
 
 https://learn.microsoft.com/ja-jp/azure/active-directory/develop/howto-restrict-your-app-to-a-set-of-users
 
-# ハマったポイント
+### カスタムドメインの設定
 
-## AppServiceのプライベートエンドポイントにアクセスできない
+AppService にカスタムドメインを設定する場合 API Management と異なりTXTレコードの検証が必須です。また、どんな状況であれパブリックインターネットから解決できる必要がります。
+検証が済めば、証明書を登録してバインドして完了です。
 
-### tl;dr
-
-ユーザー定義ルートを作成し、「プライベートエンドポイントのネットワークポリシー」でテーブルルーティングを有効にする
-
-https://learn.microsoft.com/ja-jp/azure/private-link/disable-private-endpoint-network-policy?tabs=network-policy-portal
-
-### 試してみたこと
-
-一番最初にハマったポイントです。同一サブネットに配置したテスト用VMにはSSHでアクセスできるのに、同じサブネットにあるエンドポイントから全くレスポンスが得られませんでした。
-名前解決もできて VNet に到達しているにも関わらずアクセスできず、原因が全く不明でした。
-
-## プライベートエンドポイントの名前解決ができない
-
-## API Management が内部化できない
-
-## AppServiceの認証後リダイレクトURLを変更したい
-
-## AppServiceでカスタムドメインを利用したい
+![step2](/images/aoai-internal/step2.png)
 
 # おわりに
 # 参考
+
+https://dev.classmethod.jp/articles/azure-openai-chatbot-in-closed-network/
+https://blog.aelterman.com/2022/01/10/azure-app-service-using-a-custom-domain-name-in-a-private-namespace/
+https://christina04.hatenablog.com/entry/2016/06/07/123000
