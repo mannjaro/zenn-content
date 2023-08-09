@@ -15,26 +15,6 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-  
   textlint:
     runs-on: ubuntu-latest
     steps:
@@ -42,22 +22,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "npm"
         
-      - uses: reviewdog/action-setup@v1
+      - name: textlint-github-check
+        uses: tsuyoshicho/action-textlint@v3
         with:
-          reviewdog_version: latest # Optional.
-        
-      - name: Install textlint
-        run: npm install -D textlint textlint-filter-rule-allowlist textlint-rule-preset-ja-technical-writing textlint-rule-spellcheck-tech-word
-
-      - name: Lint articles
-        run: npm run lint > textlint.log
-          
-      - name: Run reviewdog when errors
-        if: ${{ failure() }}
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run:
-          cat textlint.log | reviewdog -f=checkstyle -name="textlint" -reporter="github-pr-review"
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          textlint_flags: "articles/**"
+      - name: textlint-github-pr-review
+        uses: tsuyoshicho/action-textlint@v3
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          textlint_flags: "articles/**"
     
