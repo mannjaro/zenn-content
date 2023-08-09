@@ -4,12 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "textlint articles/**/*.md"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "zenn-cli": "^0.1.144"
+  },
+  "devDependencies": {
+    "textlint": "^13.3.3",
+    "textlint-filter-rule-allowlist": "^4.0.0",
+    "textlint-rule-preset-ja-technical-writing": "^8.0.0",
+    "textlint-rule-spellcheck-tech-word": "^5.0.0"
   }
 }
