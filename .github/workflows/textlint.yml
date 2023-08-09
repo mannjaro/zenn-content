@@ -42,16 +42,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: "npm"
+        
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest # Optional.
         
       - name: Install textlint
         run: npm install -D textlint textlint-filter-rule-allowlist textlint-rule-preset-ja-technical-writing textlint-rule-spellcheck-tech-word
 
       - name: Lint articles
         run: npm run lint > textlint.log
-
-      - uses: reviewdog/action-setup@v1
-        with:
-          reviewdog_version: latest # Optional. [latest,nightly,v.X.Y.Z]
           
       - name: Run reviewdog when errors
         if: ${{ failure() }}
