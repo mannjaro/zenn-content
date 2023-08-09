@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: true
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -33,6 +35,7 @@ jobs:
         uses: tsuyoshicho/action-textlint@v3
         with:
           github_token: ${{ secrets.github_token }}
+          level: warning
           reporter: github-pr-review
           textlint_flags: "articles/**"
     
