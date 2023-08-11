@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "textlint articles/**/*.md"
+    "lint": "textlint articles/**/*.md",
+    "fix": "textlint --fix articles/**/*.md"
   },
   "keywords": [],
   "author": "",
