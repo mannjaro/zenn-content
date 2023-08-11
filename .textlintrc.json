@@ -1,0 +1,21 @@
+{
+  "plugins": {},
+  "filters": {
+    "allowlist": {
+        "allow": [
+            "/^::::*$/m"
+        ]
+    }
+  },
+  "rules": {
+    "preset-ja-technical-writing": {
+        "max-comma": {
+            "max": 3
+        },
+        "max-ten": {
+            "max": 3
+        },
+    },
+    "spellcheck-tech-word": true
+  }
+}
