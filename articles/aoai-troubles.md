@@ -3,7 +3,7 @@ title: "新卒社員が社内向けAIチャットサービスを構築した話 
 emoji: "🕳️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [Azure, OpenAI]
-published: false
+published: true
 ---
 
 # はじめに
