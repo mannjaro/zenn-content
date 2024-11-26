@@ -3,7 +3,7 @@ title: "Cognito の Passkey を試す"
 emoji: "🔐"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [aws, cognito]
-published: false
+published: true
 ---
 
 # はじめに
