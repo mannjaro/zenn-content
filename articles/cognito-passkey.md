@@ -56,7 +56,7 @@ Passkeyの仕組みやCognitoについての解説はしません
 
 # フロントエンド側のセットアップ
 
-viteで簡単なテンプレートを作成します。
+viteでテンプレートを作成します。
 
 ```sh
 npm create vite@latest my-passkey-app -- --template react
