@@ -95,7 +95,7 @@ AuthProviderとログイン用のボタンを追加します。
 + import { AuthProvider } from "react-oidc-context";
 
 + const cognitoAuthConfig = {
-+   authority: "https://cognito-idp.ap-northeast-1.amazonaws.com/${ユーザープール ID}",
++   authority: "https://cognito-idp.${リージョン名}.amazonaws.com/${ユーザープール ID}",
 +   client_id: "${クライアント ID}",
 +   redirect_uri: "http://localhost:5173/",
 +   response_type: "code",
