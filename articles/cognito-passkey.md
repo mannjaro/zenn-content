@@ -226,6 +226,16 @@ Passkey登録用ページに遷移させるためのボタンを設置し、後�
 https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html#amazon-cognito-user-pools-authentication-flow-methods-passkey
 
 パスキー登録用ボタンをクリックすると、先ほどと同じように登録ページに移動します。
+これで、後からでもPasskeyを登録できるようになりました。
+
+:::message
+この方法では後からいくらでも登録できてしまうので、何らかの方法で登録情報を取得してあげる必要がありそうです。
+:::
+
 ![frontend4](/images/cognito-passkey/frontend_4.gif)
 
-これで、後からでもPasskeyを登録できるようになりました。
+
+# あとがき
+
+CognitoだけでPasskeyを利用できるようになったのは良いですね。
+ただ、マネコン上でPasskeyの登録状態を確認できなかったり、MFAとPasskeyの併用がイマイチだったりと、これからの改善に期待したいです。
