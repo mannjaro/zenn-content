@@ -8,7 +8,7 @@ published: false
 
 # はじめに
 
-11/22にCognitoの大幅アップデートが入り、その中の一つにPasskeyのサポートが追加されました。Passkeyの実装に詳しくなくても、簡単に認証ができたのでその方法についてまとめます。
+11/22にCognitoの大幅アップデートが入り、その中の1つにPasskeyのサポートが追加されました。Passkeyの実装に詳しくなくても、簡単に認証ができたのでその方法についてまとめます。
 
 https://aws.amazon.com/jp/blogs/aws/improve-your-app-authentication-workflow-with-new-amazon-cognito-features/
 
@@ -34,11 +34,11 @@ Passkeyの仕組みやCognitoについての解説はしません
 
 ## アプリケーションクライアントの設定
 
-正常に作成されたら、一番下の「概要に移動」しユーザープールの設定を表示します。左のサイドバーからアプリケーションクライアントを選択し、認証フローに **選択ベースのサインイン** が有効化されていることを確認します
+正常に作成されたら、一番下の「概要に移動」しユーザープールの設定を表示します。左のサイドバーからアプリケーションクライアントを選択し、認証フローに **選択ベースのサインイン** が有効化されていることを確認します。
 
 ![userpool1](/images/cognito-passkey/cognito-userpool_1.png)
 
-また、この後ローカルでの動作確認を行うため、**許可されているコールバックURL** および **許可されているサインアウト URL - オプション** に `http://localhost:5173/` を入力します
+この後ローカルでの動作確認を行うため、**許可されているコールバックURL** および **許可されているサインアウト URL - オプション** に `http://localhost:5173/` を入力します。
 
 ![userpool2](/images/cognito-passkey/cognito-userpool_2.png)
 
@@ -48,7 +48,7 @@ Passkeyの仕組みやCognitoについての解説はしません
 
 ![userpool4](/images/cognito-passkey/cognito-userpool_4.png)
 
-最後に以下の情報をメモしておきます。これらの情報は、フロントエンド側の設定に使用します
+最後に以下の情報をメモしておきます。これらの情報は、フロントエンド側の設定に使用します。
 
 - ユーザープール ID
 - クライアント ID
@@ -56,7 +56,7 @@ Passkeyの仕組みやCognitoについての解説はしません
 
 # フロントエンド側のセットアップ
 
-viteで簡単なテンプレートを作成します
+viteで簡単なテンプレートを作成します。
 
 ```sh
 npm create vite@latest my-passkey-app -- --template react
@@ -74,13 +74,18 @@ CognitoのQuick Setupガイドに従ってフロントエンドを編集して�
 
 ![frontend0](/images/cognito-passkey/frontend_0.png)
 
-**oidc-client-ts**と**react-oidc-context**のインストール
+### 必要なパッケージのインストール
+
+指示に従い、oidc-client-tsとreact-oidc-contextをダウンロードします。
 
 ```sh
 npm install oidc-client-ts react-oidc-context --save
 ```
 
-AuthProviderとログインボタンの追加
+### AuthProviderとログインボタンの追加
+
+AuthProviderとログイン用のボタンを追加します。
+（元のapp.tsxの記述は邪魔なので一部消しています）
 
 ```diff jsx:main.jsx
  import { StrictMode } from 'react'
@@ -105,8 +110,6 @@ AuthProviderとログインボタンの追加
    </StrictMode>,
  )
 ```
-
-（元のapp.tsxの記述は邪魔なので全て消します）
 
 ```tsx:app.tsx
 import './App.css'
@@ -166,9 +169,10 @@ http://localhost:5173/ にアクセスし、Sign inボタンからマネージ�
 
 ## 後からPasskeyを登録する
 
-この方法は、初回アカウント作成時しか利用できず、 `Set up sign-in with a passkey` で Not nowを選択してしてしまったり、マネコン側からユーザーを作成する場合は別途登録画面に遷移させる必要があります。
+この方法は、初回アカウント作成時しか利用できません。
+ `Set up sign-in with a passkey` で Not nowを選択してしてしまったり、マネコン側からユーザーを作成する場合は別途登録画面に遷移させる必要があります。
 
-Passkey登録用ページに遷移させるためのボタンを設置し、後からでも登録できるようにします。
+そこで、Passkey登録用ページに遷移させるためのボタンを設置し、後からでも登録できるようにします。
 
 ```diff tsx:app.tsx
  import './App.css'
@@ -224,3 +228,5 @@ https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-po
 
 パスキー登録用ボタンをクリックすると、先ほどと同じように登録ページに移動します。
 ![frontend4](/images/cognito-passkey/frontend_4.png)
+
+これで、後からでもPasskeyを登録できるようになりました。
