@@ -169,10 +169,9 @@ http://localhost:5173/ にアクセスし、Sign inボタンからマネージ�
 
 ## 後からPasskeyを登録する
 
-この方法は、初回アカウント作成時しか利用できません。
- `Set up sign-in with a passkey` で Not nowを選択してしてしまったり、マネコン側からユーザーを作成する場合は別途登録画面に遷移させる必要があります。
+`Set up sign-in with a passkey` で Not nowを選択してしてしまったり、マネコン側からユーザーを作成した場合は別の方法で登録画面に遷移させる必要があります。
 
-そこで、Passkey登録用ページに遷移させるためのボタンを設置し、後からでも登録できるようにします。
+Passkey登録用ページに遷移させるためのボタンを設置し、後からでも登録できるようにします。
 
 ```diff tsx:app.tsx
  import './App.css'
@@ -227,6 +226,6 @@ http://localhost:5173/ にアクセスし、Sign inボタンからマネージ�
 https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html#amazon-cognito-user-pools-authentication-flow-methods-passkey
 
 パスキー登録用ボタンをクリックすると、先ほどと同じように登録ページに移動します。
-![frontend4](/images/cognito-passkey/frontend_4.png)
+![frontend4](/images/cognito-passkey/frontend_4.gif)
 
 これで、後からでもPasskeyを登録できるようになりました。
