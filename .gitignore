@@ -196,4 +196,4 @@ dist
 
 bun.lockb
 
-docs/template.md
+docs/*.md
