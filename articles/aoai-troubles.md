@@ -62,7 +62,7 @@ AppServiceに証明書を登録する際、.pfx形式のファイルをアップ
 秘密鍵の暗号化アルゴリズムがTripleDESでない場合、これらが発生するそうです。
 しかし、DESは今後廃止される流れにあり、TripleDESはopensslコマンドではデフォルトで無効になっています。
 
-秘密鍵はaes256で作成していたため、暫定的にopensslコマンドに `-legacy` オプションを付けて.pfxファイルを作成しました。(これで良いのか？)
+秘密鍵はaes256で作成していたため、暫定的にopensslコマンドに `-legacy` オプションを付けて.pfxファイルを作成しました。(これで良いのか？ )
 
 https://stackoverflow.com/questions/73001634/azure-app-service-unable-to-validate-pfx-file-certificate-failed-validation-be
 
