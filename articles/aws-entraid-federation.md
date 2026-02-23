@@ -43,6 +43,10 @@ https://aws.amazon.com/jp/blogs/news/simplify-access-to-external-services-using-
 5. LambdaでGetWebIdentityTokenから得られたJWTを用いて、EntraID側に一時トークンの発行をリクエスト
 6. 一時トークンを利用しAzure OpenAI Serviceにリクエスト
 
+![news-iam-web-identity](/images/aws-entraid-federation/news-2025-iam-web-identity-3-4.png)
+参照元: https://aws.amazon.com/jp/blogs/news/simplify-access-to-external-services-using-aws-iam-outbound-identity-federation/
+
+
 ## AWS側の作業
 
 まずはIAM Outbound Identityを有効化（AWSアカウント単位）します。
@@ -79,7 +83,7 @@ touch lambda/index.ts
 
 作成された`lib/aws-azure-federation-stack.ts`に以下を記述します。
 
-:::message
+:::message alert
 作成されるリソースには認証がないため誰でもアクセスできる状態でデプロイされます。
 本番環境ではIAM認証やAPI Gatewayで保護してください。
 :::
@@ -216,10 +220,10 @@ https://learn.microsoft.com/ja-jp/entra/workload-id/workload-identity-federation
 現時点では「明示的なサブジェクト識別子」しか利用できないため、ワイルドカードなどが利用できません。
 そのため、複数ロールからアクセスしたい場合はロールの数だけ登録が必要です。
 
-なお、一つのアプリケーションに対して設定可能なフェデレーション資格情報は最大20件までです。
+なお、一つのアプリケーションに対して設定可能なフェデレーション資格情報は**最大20件**までです。
 :::
 :::message
-ワイルドカードの利用には「柔軟なフェデレーションID資格情報」が必要ですが、現時点（2025/02/23）ではGitHub、GitLab、Terraform Cloudの3サービスのみサポートしています
+ワイルドカードの利用には「柔軟なフェデレーションID資格情報」が必要ですが、現時点（2025/02/23）ではGitHub、GitLab、Terraform Cloudのみがサポートされています
 :::
 
 https://learn.microsoft.com/ja-jp/entra/workload-id/workload-identities-set-up-flexible-federated-identity-credential?tabs=azure-portal%2Cgithub
@@ -518,3 +522,9 @@ AwsAzureFederationStack: destroying... [1/1]
 AWS IAM Outbound ID Federationを用いることで、これまでできなかったAWSから外部サービスの呼び出しを短命なJWTで行うことができ、よりセキュアな通信が可能になりました。
 
 また、長期間有効なシークレットのローテーション作業も不要になるため、シークレットの更新し忘れでサービスが動作しなくなるリスクも軽減されます。
+
+ただし、複数のIAMロールからアクセスさせたい場合、現在はワイルドカードなどが利用できないためロール毎にARNを登録する必要がある点に注意が必要です。
+
+## 参考文献
+https://aws.amazon.com/jp/blogs/news/simplify-access-to-external-services-using-aws-iam-outbound-identity-federation/
+https://learn.microsoft.com/ja-jp/entra/workload-id/workload-identity-federation
