@@ -1,10 +1,14 @@
 ---
-title: "AWSからセキュアにAzureOpenAIにリクエストする"
+title: "AWS IAM Outbound ID Federationを使って安全にAzureOpenAIへアクセスする"
 emoji: "😊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["aws", "iam", "azure", "entraid"]
 published: false
 ---
+
+:::message
+この記事は人間100%で書かれました
+:::
 
 ## 概要
 
