@@ -23,7 +23,7 @@ https://aws.amazon.com/jp/blogs/news/simplify-access-to-external-services-using-
 - AWSアカウントとAzureアカウントを所持している
 - AWSのIAMロールや、Azureのリソースグループの概念について知っている
 - AWS CDKの使い方を知っている
-  - LambdaやIAMロールの作成に使用します
+  - LambdaやIAMロールの作成に使用
 - AWSからAzureへのアクセスにAPIキーや長寿命なクライアントシークレットを使っている
 
 ### 検証環境
@@ -220,7 +220,7 @@ https://learn.microsoft.com/ja-jp/entra/workload-id/workload-identity-federation
 現時点では「明示的なサブジェクト識別子」しか利用できないため、ワイルドカードなどが利用できません。
 そのため、複数ロールからアクセスしたい場合はロールの数だけ登録が必要です。
 
-なお、一つのアプリケーションに対して設定可能なフェデレーション資格情報は**最大20件**までです。
+なお、1つのアプリケーションに対して設定可能なフェデレーション資格情報は**最大20件**までです。
 :::
 :::message
 ワイルドカードの利用には「柔軟なフェデレーションID資格情報」が必要ですが、現時点（2025/02/23）ではGitHub、GitLab、Terraform Cloudのみがサポートされています
@@ -246,7 +246,7 @@ AzureOpenAIのエンドポイントをメモしておきます。
 
 ## AWS LambdaからAzure OpenAIへのリクエスト
 
-Lambdaから実行するための修正を行います。
+Lambdaから実行するためコードに追記します。
 
 ### CDKコードの修正
 
@@ -309,7 +309,7 @@ npm install @azure/identity @aws-sdk/client-sts openai
 2. EntraIDに対してクレデンシャルのリクエスト
 3. 取得したクレデンシャルを用いてAzureOpenAIにリクエスト
  
-今回はAzureOpenAIの`v1`エンドポイントを利用します
+今回はAzureOpenAIの`v1`エンドポイントを利用します。
 
 https://learn.microsoft.com/ja-jp/azure/ai-foundry/openai/api-version-lifecycle?view=foundry-classic&tabs=python
 
@@ -483,7 +483,7 @@ npx cdk deploy --require-approval never
 
 ## お片付け
 
-最後にAWS側のリソースとAzureEntraIDのアプリケーションを削除します
+最後にAWS側のリソースとAzureEntraIDのアプリケーションを削除します。
 
 ### AWSリソースの削除
 
